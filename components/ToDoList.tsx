@@ -1,9 +1,10 @@
-import { Card, Container, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, Typography } from "@mui/material";
+import { Button, Card, Container, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Typography } from "@mui/material";
 import { grey } from "@mui/material/colors";
 import { Stack } from "@mui/system";
 import { useEffect, useState } from "react";
 import { TodoModel } from "../models/TodoModel";
 import useTodoStore from "../store/store";
+import { AddTodoDialog } from "./AddTodoDialog";
 import { Todo } from "./Todo";
 
 
@@ -12,7 +13,6 @@ export const TodoList = () => {
     const {todos, setTodos} = useTodoStore(); //zustand store
 
     const filterTodos = (filterValue:string): TodoModel[]  =>{
-        console.log("Filtering by: "+filterValue);
         switch (filterValue)
         {
             case "COMPLETE":
@@ -63,24 +63,51 @@ export const TodoList = () => {
         let todosCopy = todos.map(x => x.Id === todo.Id ? todo : x);
         setTodos(todosCopy);
     }
+
+    const DeleteTodoFromList = (todo: TodoModel) =>
+    {
+        let todosCopy = todos.filter(x => x.Id !== todo.Id);
+        setTodos(todosCopy);
+    }
+
+    const AddTodoItem = (todoName: string) =>
+    {
+        setTodos([...todos,{Name:todoName, IsComplete:false,Id:todos.length+1}]);
+    }
     
     return (
         <>
             <Stack spacing={2}>
-                <Card sx={{padding:2}}>
-                    <FormControl>
-                        <FormLabel id="todo-filter-controls">Filter By</FormLabel>
-                        <RadioGroup name="filter-radios" value={todofilter} onChange={changeFilter} row aria-labelledby="todo-filter-controls">
-                            <FormControlLabel value="ALL" control={<Radio />} label="All" checked = {todofilter == "ALL" ? true: false}/>
-                            <FormControlLabel value="COMPLETE" control={<Radio />} label="Completed" checked = {todofilter == "COMPLETE" ? true: false}/>
-                            <FormControlLabel value="INCOMPLETE" control={<Radio />} label="Not Completed" checked = {todofilter == "INCOMPLETE" ? true: false}/>
-                        </RadioGroup>
-                    </FormControl>
-                </Card>
-                <Card sx={{padding:2}}>
+                <Grid container spacing={1}>
+                    <Grid item md={10}>
+                        <Card sx={{padding:2}}>
+                            <FormControl>
+                                <FormLabel id="todo-filter-controls">Filter By</FormLabel>
+                                <RadioGroup name="filter-radios" value={todofilter} onChange={changeFilter} row aria-labelledby="todo-filter-controls">
+                                    <FormControlLabel value="ALL" control={<Radio />} label="All" checked = {todofilter == "ALL" ? true: false}/>
+                                    <FormControlLabel value="COMPLETE" control={<Radio />} label="Completed" checked = {todofilter == "COMPLETE" ? true: false}/>
+                                    <FormControlLabel value="INCOMPLETE" control={<Radio />} label="Not Completed" checked = {todofilter == "INCOMPLETE" ? true: false}/>
+                                </RadioGroup>
+                            </FormControl>
+                        </Card>
+                    </Grid>
+                    <Grid item md={2} alignItems="center">
+                        <Card sx={{padding:1.5}}>
+                            <div style={{ display:'flex', justifyContent:'center' }}>
+                                <AddTodoDialog addTodo={AddTodoItem}/>
+                            </div>
+                        </Card>
+                    </Grid>
+                </Grid>
+                <Card sx={{padding:2, maxHeight:"70vh", overflow:'auto', scrollbarWidth:"thin"}} >
                 {
                     filteredTodos.length > 0 ? filteredTodos.map((todo,index) =>{
-                        return <Todo todo={todo} onUpdate={updateTodoList} key={todo.Id}/>
+                        return (
+                        <>
+                            <Todo todo={todo} UpdateTodo={updateTodoList} DeleteTodo={DeleteTodoFromList} key={todo.Id}/>
+                            <Divider />
+                        </>
+                        );
                     }) : <Typography variant="body1" sx = {{fontStyle:'italic', fontFamily:'monospace', color: grey[400]}} >No items to show</Typography>
                 }
                 </Card>

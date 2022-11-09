@@ -1,11 +1,8 @@
-import { Card, Typography } from '@mui/material'
+import { Typography } from '@mui/material'
 import { grey } from '@mui/material/colors'
 import { Box, Container } from '@mui/system'
 import Head from 'next/head'
-import { Todo } from '../components/Todo'
 import { TodoList } from '../components/ToDoList'
-import { TodoModel } from '../models/TodoModel'
-import useTodoStore from '../store/store'
 
 export default function Home() { 
   return (

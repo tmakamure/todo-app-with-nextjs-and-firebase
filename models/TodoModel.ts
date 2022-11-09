@@ -1,6 +1,6 @@
 export type TodoModel =
 {
-    Name : string,
+    Name : string|null,
     IsComplete: boolean,
     Id: number
 };

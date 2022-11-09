@@ -6,25 +6,26 @@ interface ITodoState
     todos: TodoModel[],
     setTodos: (todos: TodoModel[]) => void
 }
- const useTodoStore = create<ITodoState>((set) =>({
+
+const useTodoStore = create<ITodoState>((set) =>({
     todos: [
         {
-          Id: 0,
-          Name : "Zustand Todo  1",
+          Id: 1,
+          Name : "Zustand Todo  0",
           IsComplete : false
         },
         {
-          Id: 1,
-          Name : " Zustand Todo  0",
+          Id: 2,
+          Name : " Zustand Todo  1",
           IsComplete : true
         },
         {
-          Id: 2,
+          Id: 3,
           Name : "Zustand Todo  2",
           IsComplete : false
         },
         {
-          Id: 3,
+          Id: 4,
           Name : "Zustand Todo  3",
           IsComplete : false
         }

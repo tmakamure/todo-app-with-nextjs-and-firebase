@@ -1,7 +1,8 @@
-import { Checkbox, Stack, Typography } from "@mui/material"
-import { NextComponentType, NextPage } from "next"
-import { FunctionComponent, useEffect, useState } from "react"
+import { Checkbox, Grid, Stack, Typography } from "@mui/material"
+import { useEffect, useState } from "react"
 import { TodoModel } from "../models/TodoModel"
+import { DeleteTodoDialog } from "./DeleteTodoDialog"
+import { EditTodoDialog } from "./EditTodoDialog"
 
 interface ITodoComponent
 {
@@ -9,33 +10,62 @@ interface ITodoComponent
     todo: TodoModel,
     
     //methods
-    onUpdate: any
+    UpdateTodo: any,
+    DeleteTodo: any
 }
-export const Todo = ({todo,onUpdate: toggleIsComplete}: ITodoComponent) =>
+export const Todo = ({todo,UpdateTodo,DeleteTodo}: ITodoComponent) =>
 {
     //state hooks
-    //const [isComplete, setIsComplete] =  useState(todo.IsComplete);
     const [todoState, setTodoState] =  useState(todo);
     
     //state mutations
     const toggleTodo = () =>{
         setTodoState({...todoState,IsComplete:!todoState.IsComplete})
-        
+    }
+    const changeTodoName = (name:string) =>{
+        setTodoState({...todoState,Name:name});
     }
 
-    // //side effects
-    useEffect(() => {
-        toggleIsComplete(todoState); //we can do this because the above effects are not immediate
+    const deleteTodoFromList = () =>
+    {
+        setTodoState({...todoState,Name: null});
+    }
+
+    //side effects
+    useEffect(() => 
+    {
+        if(todoState.Name !== null)
+            UpdateTodo(todoState); //we can do this because the above effects are not immediate
+        else
+        {
+            //deleting the todo
+            console.log("deleting the todo "+todoState.Id)
+            DeleteTodo(todoState)
+        }
+            
     },[todoState]);
 
     return (
-        <div style={{display:'flex', flexDirection:'row', padding:4 }}>
-            <Checkbox checked={todoState.IsComplete}  onChange = {toggleTodo} size = "small"/>
-            <Typography variant="h5" sx={ todoState.IsComplete ? 
-                {color:'grey', textDecorationLine: 'line-through'} : 
-                {color: 'black', textDecorationLine: 'none'}}>
-                {todoState.Name}
-            </Typography>
-        </div>
-    );
+        <>
+            <Grid container spacing={1} padding={0.75}>
+                <Grid item md={1}>
+                    <Checkbox checked={todoState.IsComplete}  onChange = {toggleTodo} size = "small"/>
+                </Grid>
+                <Grid item md={7}>
+                    <Typography variant="h6" sx={ todoState.IsComplete ? 
+                        {color:'grey', textDecorationLine: 'line-through'} : 
+                        {color: 'black', textDecorationLine: 'none'}}>
+                        {todoState.Name}
+                    </Typography>
+                </Grid>
+                <Grid item md={4}>
+                    <Stack direction="row" spacing={0.5} justifyContent="left">
+                        <EditTodoDialog value={todoState} modifyTodo={changeTodoName}/>
+                        <DeleteTodoDialog value={todoState} modifyTodo={deleteTodoFromList} />
+                    </Stack>
+                </Grid>
+            </Grid>
+            
+        </>
+        );
 }
