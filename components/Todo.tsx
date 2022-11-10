@@ -17,32 +17,36 @@ export const Todo = ({todo,UpdateTodo,DeleteTodo}: ITodoComponent) =>
 {
     //state hooks
     const [todoState, setTodoState] =  useState(todo);
+    const [isStateChange, setIsStateChange] = useState(false);
     
     //state mutations
     const toggleTodo = () =>{
+        setIsStateChange(true);
         setTodoState({...todoState,IsComplete:!todoState.IsComplete})
     }
     const changeTodoName = (name:string) =>{
+        setIsStateChange(true);
         setTodoState({...todoState,Name:name});
     }
 
     const deleteTodoFromList = () =>
     {
+        setIsStateChange(true);
         setTodoState({...todoState,Name: null});
     }
 
     //side effects
     useEffect(() => 
     {
-        if(todoState.Name !== null)
-            UpdateTodo(todoState); //we can do this because the above effects are not immediate
-        else
+        console.log("TODO STATE CHANGE: "+isStateChange)
+        if(isStateChange)
         {
-            //deleting the todo
-            console.log("deleting the todo "+todoState.Id)
-            DeleteTodo(todoState)
+            if(todoState.Name !== null)
+                UpdateTodo(todoState); 
+            else
+                DeleteTodo(todoState)
         }
-            
+        
     },[todoState]);
 
     return (

@@ -1,16 +1,17 @@
-import { Button, Card, Container, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Typography } from "@mui/material";
-import { grey } from "@mui/material/colors";
+import { Alert, Button, Card, Container, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Typography } from "@mui/material";
+import { grey, red } from "@mui/material/colors";
 import { Stack } from "@mui/system";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { TodoModel } from "../models/TodoModel";
 import useTodoStore from "../store/store";
 import { AddTodoDialog } from "./AddTodoDialog";
 import { Todo } from "./Todo";
-
+import { v4 as uuidv4 } from 'uuid';
 
 export const TodoList = () => {
     
-    const {todos, setTodos} = useTodoStore(); //zustand store
+    const {todos, setTodos, updateTodoItem, addTodoItem,deleteTodoItem} = useTodoStore(); //zustand store
 
     const filterTodos = (filterValue:string): TodoModel[]  =>{
         switch (filterValue)
@@ -26,9 +27,24 @@ export const TodoList = () => {
     }
     const [todofilter, setTodoFilter] = useState("ALL");
     const [filteredTodos, setFilteredTodos] = useState(todos);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] =  useState(false)
 
     useEffect(() =>
     {
+        if(loading)
+        {
+           axios.get('http://localhost:4000/todos')
+           .then((response) =>{
+                setTodos(response.data)
+           })
+           .catch(error =>{
+                console.log("Error Fetching Todos: ",error)
+                setError(true);
+            }).finally(() =>{
+                setLoading(false);
+            })
+        }
         setFilteredTodos(filterTodos(todofilter));
     }, [todofilter,todos])
 
@@ -60,21 +76,23 @@ export const TodoList = () => {
 
     const updateTodoList = (todo: TodoModel) =>
     {
-        let todosCopy = todos.map(x => x.Id === todo.Id ? todo : x);
-        setTodos(todosCopy);
+        updateTodoItem(todo);
     }
 
     const DeleteTodoFromList = (todo: TodoModel) =>
     {
-        let todosCopy = todos.filter(x => x.Id !== todo.Id);
-        setTodos(todosCopy);
+        deleteTodoItem(todo);
     }
 
     const AddTodoItem = (todoName: string) =>
     {
-        setTodos([...todos,{Name:todoName, IsComplete:false,Id:todos.length+1}]);
+        addTodoItem({Name:todoName, IsComplete:false,Id:uuidv4()});
     }
     
+    if(loading)
+        return <Typography variant="body1" color={grey[400]}>Loading . . . </Typography>
+    if(error)
+        return <Typography variant="body1" color={red[400]}>An error occured while fetching todos</Typography>
     return (
         <>
             <Stack spacing={2}>
@@ -105,7 +123,7 @@ export const TodoList = () => {
                         return (
                         <>
                             <Todo todo={todo} UpdateTodo={updateTodoList} DeleteTodo={DeleteTodoFromList} key={todo.Id}/>
-                            <Divider />
+                            <Divider/>
                         </>
                         );
                     }) : <Typography variant="body1" sx = {{fontStyle:'italic', fontFamily:'monospace', color: grey[400]}} >No items to show</Typography>
@@ -115,4 +133,5 @@ export const TodoList = () => {
             
         </>
     );
+    
 }
