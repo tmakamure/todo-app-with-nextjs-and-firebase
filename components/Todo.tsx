@@ -38,7 +38,6 @@ export const Todo = ({todo,UpdateTodo,DeleteTodo}: ITodoComponent) =>
     //side effects
     useEffect(() => 
     {
-        console.log("TODO STATE CHANGE: "+isStateChange)
         if(isStateChange)
         {
             if(todoState.Name !== null)

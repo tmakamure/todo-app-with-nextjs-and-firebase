@@ -1,18 +1,24 @@
-import { Alert, Button, Card, Container, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Typography } from "@mui/material";
+import { Card, Divider, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Typography } from "@mui/material";
 import { grey, red } from "@mui/material/colors";
 import { Stack } from "@mui/system";
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { TodoModel } from "../models/TodoModel";
-import useTodoStore from "../store/store";
+import useTodoStore from "../store/todoStore";
 import { AddTodoDialog } from "./AddTodoDialog";
 import { Todo } from "./Todo";
-import { v4 as uuidv4 } from 'uuid';
+import {getFirestore, query, where } from "firebase/firestore";
+import useUserStore from "../store/userStore";
+import { firebaseApp } from "../services/firebase";
+import { collection, getDocs } from "firebase/firestore";
+
 
 export const TodoList = () => {
-    
-    const {todos, setTodos, updateTodoItem, addTodoItem,deleteTodoItem} = useTodoStore(); //zustand store
+    const db = getFirestore(firebaseApp);
+    //zustand stores
+    const {todos, setTodos, updateTodoItem, addTodoItem,deleteTodoItem} = useTodoStore(); 
+    const {user} = useUserStore();
 
+    //helpers
     const filterTodos = (filterValue:string): TodoModel[]  =>{
         switch (filterValue)
         {
@@ -25,28 +31,50 @@ export const TodoList = () => {
                 return todos;
         }
     }
+
+    //local state
     const [todofilter, setTodoFilter] = useState("ALL");
     const [filteredTodos, setFilteredTodos] = useState(todos);
     const [loading, setLoading] = useState(true);
     const [error, setError] =  useState(false)
 
     useEffect(() =>
-    {
+    {  
         if(loading)
         {
-           axios.get('http://localhost:4000/todos')
-           .then((response) =>{
-                setTodos(response.data)
-           })
-           .catch(error =>{
-                console.log("Error Fetching Todos: ",error)
-                setError(true);
-            }).finally(() =>{
-                setLoading(false);
-            })
+           console.log("Fetching todos from firestore");
+           fetchTodosFromFireStore();
         }
         setFilteredTodos(filterTodos(todofilter));
     }, [todofilter,todos])
+
+    const fetchTodosFromFireStore = async() =>{
+        try 
+        {
+            let initTodos : TodoModel[] = [];
+            const todosQuery = query(collection(db,"todos"),where("uid","==",`${user?.id}`));
+            const todosSnapshot = await getDocs(todosQuery);
+            todosSnapshot.forEach((doc) =>{
+                initTodos.push({
+                    Id:doc.id,
+                    IsComplete: doc.data().isComplete,
+                    Name: doc.data().name,
+                    uid: doc.data().uid
+                });
+            });
+            setTodos(initTodos);
+            setLoading(false);
+        } 
+        catch (error) 
+        {
+            console.log("Error Fetching Todos: ",error);
+            setError(true);
+        }
+        finally
+        {
+            setLoading(false);
+        }
+    };
 
     const changeFilter = (e: React.ChangeEvent<HTMLInputElement>) =>
     {
@@ -86,11 +114,12 @@ export const TodoList = () => {
 
     const AddTodoItem = (todoName: string) =>
     {
-        addTodoItem({Name:todoName, IsComplete:false,Id:uuidv4()});
+        if(user)
+            addTodoItem({Name:todoName, IsComplete:false,Id:null,uid:user.id});
     }
     
     if(loading)
-        return <Typography variant="body1" color={grey[400]}>Loading . . . </Typography>
+        return <Typography variant="h6" color={grey[500]}>Loading . . . </Typography>
     if(error)
         return <Typography variant="body1" color={red[400]}>An error occured while fetching todos</Typography>
     return (
