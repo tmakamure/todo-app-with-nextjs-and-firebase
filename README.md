@@ -1,34 +1,77 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Todo App v4  - With Firebase Integration
+This s simple todo app written in NextJs React with TypeScript, with Zustand as the state manager.
 
-## Getting Started
+# How to use
+## Configuring Firebase
+Before you can run this project, you will need to:
+* Create your own firebase project by following the link here: https://console.firebase.google.com/
+    * You can turn off analytics as you wont really need them for this project
 
-First, run the development server:
+### Enabling Authentication
+* Once the project is created, click on "Authnetication" card -> then the "Get Started" button
+* Choose Email and Password as your authentication provider as below
+* Choose enable Email and Password (The first option on the list)
 
-```bash
-npm run dev
-# or
-yarn dev
+### Adding an APP to the project
+* Now add an App to you project by going to project settings
+* Choose Web as your app type, give it a name and register it
+    * You do not need to setup fire base hosting for this demo app
+* On registering you will be provided with firebase config which loos like the below:
+
+```
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "YOUR_VALUE_HERE",
+  authDomain: "YOUR_VALUE_HERE",
+  projectId: "YOUR_VALUE_HERE",
+  storageBucket: "YOUR_VALUE_HERE",
+  messagingSenderId: "YOUR_VALUE_HERE",
+  appId: "YOUR_VALUE_HERE"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Configuring Firestore
+This app makes use of firestore - firebase's document based database. To activate firestore in your project,
+follow the below steps:
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+* From the project overview page, click on the "Cloud Firestore" card
+* Click on the "Create Database" card
+* Choose "Start in production mode"
+* Choose a location for your database
+* A cloud firestore instance will be provisioned. On the firestore console, navigate to the rules page
+* Replace the existing rule with the following:
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read,update,delete: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+    }
+  }
+}
+```
+* Publish the rules
+## Adding Firebase config to the Source Code
+* Open the project in your IDE of choice and navigate to: /services/firebase.ts
+* Replace the firebase config object with the config object you obtained in the previous step
+* In your teminal, navigate to the project directory and run `npm install`
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Running the App
+* After the dependencies are installed, you can now run the following commands in the terminal:
+ ```
+ npm run build
+ npm run start
+ ```
+* This will start the server on a port typically port 3000. The specific port used will be displayed in the terminal
+* You can now open a web browser of your choice and navigate to: `localhost:{PORT}/`
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+NB: You will need to sign up users before they can sign in.
